@@ -104,9 +104,10 @@ class ItemProcess implements ItemProcessInterface
             if ($child->getRoute()) {
                 $child->setLink($this->router->generate($child->getRoute()['name'], $child->getRoute()['params']));
 
-                // Link Active Class
+                // Link & List Active Class
                 if ($this->currentUri === $child->getLink()) {
                     $child->setListAttr(array_merge_recursive($child->getListAttr(), ['class' => $options['currentClass']]));
+                    $child->setLinkAttr(array_merge_recursive($child->getLinkAttr(), ['class' => $options['currentClass']]));
                 }
             }
 
