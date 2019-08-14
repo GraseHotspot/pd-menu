@@ -4,16 +4,15 @@
  * This file is part of the pd-admin pd-menu package.
  *
  * @package     pd-menu
- *
  * @license     LICENSE
  * @author      Kerem APAYDIN <kerem@apaydin.me>
- *
  * @link        https://github.com/appaydin/pd-menu
  */
 
 namespace Pd\MenuBundle\Render;
 
 use Pd\MenuBundle\Builder\ItemInterface;
+use Twig\Environment;
 
 /**
  * Menu Twig Rendering.
@@ -23,16 +22,16 @@ use Pd\MenuBundle\Builder\ItemInterface;
 class TwigRender implements RenderInterface
 {
     /**
-     * @var \Twig_Environment
+     * @var Environment
      */
     private $engine;
 
     /**
      * TwigRender constructor.
      *
-     * @param \Twig_Environment $engine
+     * @param Environment $engine
      */
-    public function __construct(\Twig_Environment $engine)
+    public function __construct(Environment $engine)
     {
         $this->engine = $engine;
     }
@@ -42,10 +41,6 @@ class TwigRender implements RenderInterface
      *
      * @param ItemInterface $item
      * @param array         $options
-     *
-     * @throws \Twig_Error_Loader
-     * @throws \Twig_Error_Runtime
-     * @throws \Twig_Error_Syntax
      *
      * @return string
      */

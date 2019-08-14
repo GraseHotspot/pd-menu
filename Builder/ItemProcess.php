@@ -4,19 +4,17 @@
  * This file is part of the pd-admin pd-menu package.
  *
  * @package     pd-menu
- *
  * @license     LICENSE
  * @author      Kerem APAYDIN <kerem@apaydin.me>
- *
  * @link        https://github.com/appaydin/pd-menu
  */
 
 namespace Pd\MenuBundle\Builder;
 
 use Pd\MenuBundle\Event\PdMenuEvent;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Menu Item Processor.
@@ -50,6 +48,7 @@ class ItemProcess implements ItemProcessInterface
      *
      * @param RouterInterface               $router
      * @param AuthorizationCheckerInterface $security
+     * @param EventDispatcherInterface      $eventDispatcher
      */
     public function __construct(RouterInterface $router, AuthorizationCheckerInterface $security, EventDispatcherInterface $eventDispatcher)
     {
@@ -70,7 +69,7 @@ class ItemProcess implements ItemProcessInterface
     {
         // Dispatch Event
         if ($menu->isEvent()) {
-            $this->eventDispatcher->dispatch($menu->getId().'.event', new PdMenuEvent($menu));
+            $this->eventDispatcher->dispatch(new PdMenuEvent($menu), $menu->getId().'.event');
         }
 
         // Set Current URI
@@ -87,11 +86,14 @@ class ItemProcess implements ItemProcessInterface
      *
      * @param ItemInterface $menu
      * @param $options
+     *
+     * @return bool
      */
-    private function recursiveProcess(ItemInterface &$menu, $options)
+    private function recursiveProcess(ItemInterface $menu, $options)
     {
         // Get Child Menus
         $childs = $menu->getChild();
+        $listActive = false;
 
         // Parent Menu Route
         if (isset($menu->getChildAttr()['data-parent'])) {
@@ -100,23 +102,7 @@ class ItemProcess implements ItemProcessInterface
 
         // Sort Current Child
         foreach ($childs as $child) {
-            // Generate Route Link
-            if ($child->getRoute()) {
-                $child->setLink($this->router->generate($child->getRoute()['name'], $child->getRoute()['params']));
-
-                // Link & List Active Class
-                if ($this->currentUri === $child->getLink()) {
-                    $child->setListAttr(array_merge_recursive($child->getListAttr(), ['class' => $options['currentClass']]));
-                    $child->setLinkAttr(array_merge_recursive($child->getLinkAttr(), ['class' => $options['currentClass']]));
-                }
-            }
-
-            // Item Security
-            if ($child->getRoles()) {
-                if (!$this->security->isGranted($child->getRoles())) {
-                    unset($childs[$child->getId()]);
-                }
-            }
+            $childActive = false;
 
             // Set Child Process
             if ($child->getChild()) {
@@ -129,16 +115,37 @@ class ItemProcess implements ItemProcessInterface
                 // Set Child List Class
                 $child->setChildAttr(array_merge_recursive($child->getChildAttr(), ['class' => 'menu_level_'.$child->getLevel()]));
 
-                $this->recursiveProcess($child, $options);
+                $childActive = $this->recursiveProcess($child, $options);
+            }
+
+            // Generate Route Link
+            if ($child->getRoute()) {
+                $child->setLink($this->router->generate($child->getRoute()['name'], $child->getRoute()['params']));
+            }
+
+                // Link & List Active Class
+            if ($this->currentUri === $child->getLink() || $childActive) {
+                $listActive = true;
+                $child->setListAttr(array_merge_recursive($child->getListAttr(), ['class' => $options['currentClass']]));
+                $child->setLinkAttr(array_merge_recursive($child->getLinkAttr(), ['class' => $options['currentClass']]));
+            }
+
+            // Item Security
+            if ($child->getRoles()) {
+                if (!$this->security->isGranted($child->getRoles())) {
+                    unset($childs[$child->getId()]);
+                }
             }
         }
 
         // Sort Item
-        usort($childs, function ($a, $b) {
+        usort($childs, static function ($a, $b) {
             return $a->getOrder() > $b->getOrder();
         });
 
         // Set Childs
         $menu->setChild($childs);
+
+        return $listActive;
     }
 }

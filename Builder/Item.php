@@ -4,10 +4,8 @@
  * This file is part of the pd-admin pd-menu package.
  *
  * @package     pd-menu
- *
  * @license     LICENSE
  * @author      Kerem APAYDIN <kerem@apaydin.me>
- *
  * @link        https://github.com/appaydin/pd-menu
  */
 
@@ -23,7 +21,7 @@ class Item implements ItemInterface
     /**
      * @var int
      */
-    private $id = null;
+    private $id;
 
     /**
      * @var string
@@ -33,12 +31,22 @@ class Item implements ItemInterface
     /**
      * @var string
      */
+    private $labelAfterHtml = '';
+
+    /**
+     * @var string
+     */
     private $link = '';
+
+    /**
+     * @var string
+     */
+    private $linkAfterHtml = '';
 
     /**
      * @var int
      */
-    private $order = null;
+    private $order;
 
     /**
      * @var array
@@ -83,7 +91,7 @@ class Item implements ItemInterface
     /**
      * @var null | ItemInterface
      */
-    private $parent = null;
+    private $parent;
 
     /**
      * @var bool
@@ -93,7 +101,8 @@ class Item implements ItemInterface
     /**
      * Item constructor.
      *
-     * @param string $name
+     * @param string $id
+     * @param $event
      */
     public function __construct(string $id, $event)
     {
@@ -101,7 +110,7 @@ class Item implements ItemInterface
         $this->event = $event;
     }
 
-    public function isEvent()
+    public function isEvent(): bool
     {
         return $this->event;
     }
@@ -130,6 +139,18 @@ class Item implements ItemInterface
         return $this;
     }
 
+    public function getLabelAfterHtml(): string
+    {
+        return $this->labelAfterHtml;
+    }
+
+    public function setLabelAfterHtml(string $html)
+    {
+        $this->labelAfterHtml = $html;
+
+        return $this;
+    }
+
     public function getLink(): string
     {
         return $this->link;
@@ -138,6 +159,18 @@ class Item implements ItemInterface
     public function setLink(string $link)
     {
         $this->link = $link;
+
+        return $this;
+    }
+
+    public function getLinkAfterHtml(): string
+    {
+        return $this->linkAfterHtml;
+    }
+
+    public function setLinkAfterHtml(string $html)
+    {
+        $this->linkAfterHtml = $html;
 
         return $this;
     }

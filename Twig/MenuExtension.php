@@ -4,10 +4,8 @@
  * This file is part of the pd-admin pd-menu package.
  *
  * @package     pd-menu
- *
  * @license     LICENSE
  * @author      Kerem APAYDIN <kerem@apaydin.me>
- *
  * @link        https://github.com/appaydin/pd-menu
  */
 
@@ -18,14 +16,16 @@ use Pd\MenuBundle\Builder\ItemProcessInterface;
 use Pd\MenuBundle\Builder\MenuInterface;
 use Pd\MenuBundle\Render\RenderInterface;
 use Psr\Container\ContainerInterface;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFunction;
 
 /**
  * Menu Twig Extension.
  *
  * @author Kerem APAYDIN <kerem@apaydin.me>
  */
-class MenuExtension extends \Twig_Extension
+class MenuExtension extends AbstractExtension
 {
     /**
      * @var RenderInterface
@@ -56,7 +56,8 @@ class MenuExtension extends \Twig_Extension
         'template' => '@PdMenu/Default/menu.html.twig',
         'depth' => null,
         'currentClass' => 'active',
-        'trans_domain' => null
+        'trans_domain' => null,
+        'iconTemplate' => '<i class="material-icons">itext</i>',
     ];
 
     /**
@@ -65,6 +66,7 @@ class MenuExtension extends \Twig_Extension
      * @param RenderInterface      $engine
      * @param ItemProcessInterface $itemProcess
      * @param ContainerInterface   $container
+     * @param TranslatorInterface  $translator
      */
     public function __construct(RenderInterface $engine, ItemProcessInterface $itemProcess, ContainerInterface $container, TranslatorInterface $translator)
     {
@@ -77,14 +79,14 @@ class MenuExtension extends \Twig_Extension
     /**
      * Create Twig Function.
      *
-     * @return array|\Twig_Function[]
+     * @return array
      */
     public function getFunctions()
     {
         return [
-            new \Twig_SimpleFunction('pd_menu_render', [$this, 'renderMenu'], ['is_safe' => ['html']]),
-            new \Twig_SimpleFunction('pd_menu_get', [$this, 'getMenu']),
-            new \Twig_SimpleFunction('arrayToAttr', [$this, 'arrayToAttr'], ['is_safe' => ['html']]),
+            new TwigFunction('pd_menu_render', [$this, 'renderMenu'], ['is_safe' => ['html']]),
+            new TwigFunction('pd_menu_get', [$this, 'getMenu']),
+            new TwigFunction('arrayToAttr', [$this, 'arrayToAttr'], ['is_safe' => ['html']]),
         ];
     }
 
@@ -123,7 +125,7 @@ class MenuExtension extends \Twig_Extension
      *
      * @return ItemInterface|bool
      */
-    public function getMenu(string $menuClass, $options = []): ItemInterface
+    public function getMenu(string $menuClass, $options = [])
     {
         // Merge Options
         $options = array_merge($this->defaultOptions, $options);
@@ -144,10 +146,11 @@ class MenuExtension extends \Twig_Extension
      *
      * @param array $array
      * @param array $append
+     * @param array $options
      *
      * @return string
      */
-    public function arrayToAttr(array $array = [], array $append = [], array $options = [])
+    public function arrayToAttr(array $array = [], array $append = [], array $options = []): string
     {
         $array = array_merge_recursive($array, $append);
         $attr = '';
@@ -163,9 +166,9 @@ class MenuExtension extends \Twig_Extension
                 }
             }
 
-            $attr .= sprintf('%s="%s"', $key, $value);
+            $attr .= sprintf('%s="%s" ', $key, $value);
         }
 
-        return $attr;
+        return trim($attr);
     }
 }
